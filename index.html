@@ -1,8 +1,62 @@
+<!DOCTYPE html>
 <html>
-<head>
-  <title>CS498: Narrative Visualization</title>
-</head>
-<body>
-  <p>Here's a paragraph</p>
-</body>
-</html>
+  <style>
+    h1 {
+      text-align: center;
+      font-family: Arial;
+      }
+    head {
+      background-color: #efefef;
+      font-family: Arial;
+      }
+    body {
+      background-color: #efefef;
+      font-family: Arial;
+    	padding-right: 50px;
+	    padding-left: 50px;
+      }
+    footer {
+      background-color: #efefef;
+      font-family: Arial;
+      }
+  </style>
+
+  <head>
+    <title>CS498: Narrative Visualization</title>
+    <script src='https://d3js.org/d3.v5.min.js'></script>
+  </head>
+
+  <div class="header">
+    <h1>Disparities in Higher Education</h1>
+  </div>
+
+  <div class="container">
+    <body>
+
+      <p>Here's a paragraph, followed by a pie chart</p>
+
+      <svg width=300 height=300>
+      </svg>
+      
+      <script>
+      var data = [4,8,15,16,23,42];
+      var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
+      var pie = d3.pie();
+      var arc = d3.arc().innerRadius(0).outerRadius(100);
+      d3.selectAll("svg").append("g")
+          .attr("transform","translate("+150+","+150+")")
+          .selectAll("path").data(pie(data))
+          .enter()
+          .append("path")
+          .attr("d",arc)
+          .attr("fill",function(d,i){return color[i]})
+      </script>
+      
+    </body>
+  </div>
+
+  <div class="footer">
+    <p></p>
+  </div>
+
+  </html>
