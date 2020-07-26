@@ -39,25 +39,40 @@
   </div>
 
   <div class="container">
-    <body>
+  <body onload='const summary_data = init()'>
+      <script>
+        async function init() {
+          const summary_data = await d3.csv('data/preprocessed_summ_vars.csv');
+          //var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
+          //document.getElementById("test").innerHTML = states;
+          return summary_data
+        }
+      </script>
+
+      <p id="test">Testing a thing</p>
 
       <p>Here's a paragraph, followed by a pie chart</p>
 
       <svg width=300 height=300>
       </svg>
+
+      <script>
+        var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
+        document.getElementById("test").innerHTML = states;
+      </script>
       
       <script>
-      var data = [4,8,15,16,23,42];
-      var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
-      var pie = d3.pie();
-      var arc = d3.arc().innerRadius(0).outerRadius(100);
-      d3.selectAll("svg").append("g")
-          .attr("transform","translate("+150+","+150+")")
-          .selectAll("path").data(pie(data))
-          .enter()
-          .append("path")
-          .attr("d",arc)
-          .attr("fill",function(d,i){return color[i]})
+        var data = [4,8,15,16,23,42];
+        var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
+        var pie = d3.pie();
+        var arc = d3.arc().innerRadius(0).outerRadius(100);
+        d3.selectAll("svg").append("g")
+            .attr("transform","translate("+150+","+150+")")
+            .selectAll("path").data(pie(data))
+            .enter()
+            .append("path")
+            .attr("d",arc)
+            .attr("fill",function(d,i){return color[i]})
       </script>
       
     </body>
