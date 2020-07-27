@@ -39,29 +39,41 @@
   </div>
 
   <div class="container">
-  <body onload='const summary_data = init()'>
-      <script>
-        async function init() {
-          const summary_data = await d3.csv('data/preprocessed_summ_vars.csv');
-          //var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
-          //document.getElementById("test").innerHTML = states;
-          return summary_data
-        }
-      </script>
+  <body onload="init()">
+    <p>Here's a paragraph, followed by some data.</p>
+    <p id="scene_label"></p>
 
-      <p id="test">Testing a thing</p>
-
-      <p>Here's a paragraph, followed by a pie chart</p>
-
-      <svg width=300 height=300>
-      </svg>
-
-      <script>
-        var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
-        document.getElementById("test").innerHTML = states;
-      </script>
+    <svg width=1000 height=1000>
+    </svg>
+    
+    <script>
       
-      <script>
+      let summary_data = null
+      async function init() {
+        summary_data = await d3.csv('data/preprocessed_summ_vars.csv');
+        load_scene_one();
+      }
+
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      async function load_scene_one(){
+        var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
+        document.getElementById("scene_label").innerHTML = "This is scene one: ";
+        d3.selectAll("svg").append("g")
+            .selectAll("text").data(states).enter().append("text")
+            .attr("x", function(d, i) { return 15; })
+            .attr("y", function(d, i) { return 15 + i * 20; })
+            .attr("fill", "black")
+            .text( function (d) { return d; });
+        await sleep(1000);
+        load_scene_two();
+      }
+
+      function load_scene_two(){
+        d3.selectAll("svg").selectAll("*").remove()
+        document.getElementById("scene_label").innerHTML = "This is scene two: ";
         var data = [4,8,15,16,23,42];
         var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
         var pie = d3.pie();
@@ -73,13 +85,15 @@
             .append("path")
             .attr("d",arc)
             .attr("fill",function(d,i){return color[i]})
-      </script>
-      
-    </body>
-  </div>
+      }
 
-  <div class="footer">
-    <p></p>
-  </div>
+    </script>
+    
+  </body>
+</div>
 
-  </html>
+<div class="footer">
+  <p></p>
+</div>
+
+</html>
