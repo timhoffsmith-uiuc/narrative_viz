@@ -21,6 +21,15 @@
       padding-bottom: 20px;
     	padding-right: 50px;
 	    padding-left: 50px;
+    }
+    .drawing {
+      display: flex;
+      justify-content: center;
+      }
+    .nav_buttons {
+      padding-top: 20px;
+      display: flex;
+      justify-content: center;
       }
     .footer {
       padding-top: 10px;
@@ -39,18 +48,35 @@
   </div>
 
   <div class="container">
-  <body onload="init()">
+    <body onload="init()">
     <p>Here's a paragraph, followed by some data.</p>
     <p id="scene_label"></p>
 
-    <svg width=1000 height=1000>
-    </svg>
-    
+    <div class="drawing">
+      <svg>
+      </svg>
+    </div>
+
+    <div class="nav_buttons">
+      <button id="previous" onclick="">Previous</button>
+      <button onclick="load_scene_one()">1</button>
+      <button onclick="load_scene_two()">2</button>
+      <button onclick="load_scene_three()">3</button>
+      <button id="next" onclick="">Next</button>
+    </div>
+
     <script>
-      
       let summary_data = null
       async function init() {
-        summary_data = await d3.csv('data/preprocessed_summ_vars.csv');
+        summary_data = await d3.csv('data/preprocessed_summ_vars.csv',
+          function(d){
+            return {
+                year : d3.timeParse("%Y")(d.year),
+                meanTuition_byYear : d.meanTuition_byYear,
+                repay_rate_category : d.repay_rate_category,
+                state_abbr : d.state_abbr
+            }
+          });
         load_scene_one();
       }
 
@@ -58,22 +84,99 @@
         return new Promise(resolve => setTimeout(resolve, ms));
       }
 
+      // async function print_state_abbreviations_and_wait(){
+      //   var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
+      //   document.getElementById("scene_label").innerHTML = "This is scene one: ";
+      //   d3.selectAll("svg")
+      //       .attr("width", 1000)
+      //       .attr("height", 1000)
+      //   d3.selectAll("svg").append("g")
+      //       .selectAll("text").data(states).enter().append("text")
+      //       .attr("x", function(d, i) { return 15; })
+      //       .attr("y", function(d, i) { return 15 + i * 20; })
+      //       .attr("fill", "black")
+      //       .text( function (d) { return d; });
+      //   //await sleep(1000);
+      //   //load_scene_two();
+      // }
+
       async function load_scene_one(){
-        var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
+        // Set scene title
         document.getElementById("scene_label").innerHTML = "This is scene one: ";
+        // Update buttons
+        document.getElementById("previous").setAttribute("onclick", "");
+        document.getElementById("next").setAttribute("onclick", "load_scene_two()");
+
+        // Set SVG vars, frame and reset the canvas, and create axis vars
+        var height = 350
+        var width = 500
+        var margin = 70
+        d3.selectAll("svg")
+            .attr("width", width + margin * 2)
+            .attr("height", height + margin * 2)
+            .selectAll("*")
+            .remove();
+        var x = d3.scaleTime()
+            .domain(d3.extent(summary_data, function(d) { return +d.year }))
+            .range([0, width]);
+        var y = d3.scaleLinear()
+            .domain([3000, d3.max(summary_data, function(d) { return +d.meanTuition_byYear; })])
+            .range([height, 0]);
+        
+        // Filter data for the line plot so we have one value per year
+        var filtered = summary_data.
+            filter(function(d) { 
+              return (d.repay_rate_category == 'repay_rate_hilodiff' && d.state_abbr == 'WI')}
+              );
+        
+        // Draw the line plot and add axes
         d3.selectAll("svg").append("g")
-            .selectAll("text").data(states).enter().append("text")
-            .attr("x", function(d, i) { return 15; })
-            .attr("y", function(d, i) { return 15 + i * 20; })
-            .attr("fill", "black")
-            .text( function (d) { return d; });
-        await sleep(1000);
-        load_scene_two();
+            .attr("tranform", "translate(" + margin + ", " + margin + ")")
+            .selectAll("path").data(filtered).enter().append("path")
+              .attr("fill", "none")
+              .attr("stroke", "steelblue")
+              .attr("stroke-width", 2)
+              .datum(filtered)
+              .attr("d", d3.line()
+                .x(function(d) { return margin + x(d.year); })
+                .y(function(d) { return margin + y(d.meanTuition_byYear); })
+                );
+        d3.selectAll("svg").append("g")
+            .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
+            .call(d3.axisBottom(x))
+            .selectAll(".tick text").attr("font-size", "11");
+        d3.selectAll("svg").append("g")
+            .attr("transform", "translate(" + margin + ", " + margin +")")
+            .call(d3.axisLeft(y))
+            .selectAll(".tick text").attr("font-size", "11");
+        
+        // Add axis labels
+        d3.selectAll("svg")
+            .append("text")
+            .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 2*margin) + ")")
+            .style("text-anchor", "middle")
+            .text("Year");
+        d3.selectAll("svg")
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0)
+            .attr("x", 0 - (height/2 + margin))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Mean Tuition")
+
+        //await sleep(1000);
+        //load_scene_two();
       }
 
-      function load_scene_two(){
+      async function load_scene_two(){
         d3.selectAll("svg").selectAll("*").remove()
+        // Set scene title
         document.getElementById("scene_label").innerHTML = "This is scene two: ";
+        // Update buttons
+        document.getElementById("previous").setAttribute("onclick", "load_scene_one()");
+        document.getElementById("next").setAttribute("onclick", "load_scene_three()");
+
         var data = [4,8,15,16,23,42];
         var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
         var pie = d3.pie();
@@ -81,10 +184,35 @@
         d3.selectAll("svg").append("g")
             .attr("transform","translate("+150+","+150+")")
             .selectAll("path").data(pie(data))
-            .enter()
-            .append("path")
-            .attr("d",arc)
-            .attr("fill",function(d,i){return color[i]})
+              .enter()
+              .append("path")
+              .attr("d", arc)
+              .attr("fill",function(d,i){return color[i]})
+        //await sleep(1000);
+        //load_scene_two();
+      }
+
+      async function load_scene_three(){
+        d3.selectAll("svg").selectAll("*").remove()
+        // Set scene title
+        document.getElementById("scene_label").innerHTML = "This is scene three: ";
+        // Update buttons
+        document.getElementById("previous").setAttribute("onclick", "load_scene_two()");
+        document.getElementById("next").setAttribute("onclick", "");
+
+        var data = [4,8,15,16,23,42];
+        var color = ['pink','lightyellow','lightgreen','lightcyan','lightblue','violet'];
+        var pie = d3.pie();
+        var arc = d3.arc().innerRadius(0).outerRadius(100);
+        d3.selectAll("svg").append("g")
+            .attr("transform","translate("+150+","+150+")")
+            .selectAll("path").data(pie(data))
+              .enter()
+              .append("path")
+              .attr("d",arc)
+              .attr("fill",function(d,i){return color[i]})
+        //await sleep(1000);
+        //load_scene_two();
       }
 
     </script>
