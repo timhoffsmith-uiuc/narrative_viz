@@ -68,20 +68,23 @@
 
   <div class="container">
     <body onload="init()">
+
     <p>Here's a paragraph, followed by some data.</p>
     <p id="scene_label"></p>
 
     <p class="graph_elements" id="graph_buttons"></p>
-    <div class="drawing">
-      <svg>
-      </svg>
-    </div>
+      <div class="drawing">
+        <svg>
+        </svg>
+      </div>
+
     </body>
   </div>
+
   <div class="footer">
     <div class="nav">
       <button class="nav_button" id="previous" onclick="">Previous</button>
-      <button class="nav_button" id="nav_button" onclick="load_scene_one()">1</button>
+      <button class="nav_button" id="nav_button" onclick="load_scene_one('tuition')">1</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_two()">2</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_three()">3</button>
       <button class="nav_button" id="next" onclick="">Next</button>
@@ -96,11 +99,13 @@
           return {
               year : d3.timeParse("%Y")(d.year),
               meanTuition_byYear : d.meanTuition_byYear,
+              meanStateApprop_byYear : d.meanStateApprop_byYear,
+              meanRepayRate_byYear : d.meanRepayRate_byYear,
               repay_rate_category : d.repay_rate_category,
               state_abbr : d.state_abbr
           }
         });
-      load_scene_one();
+      load_scene_one('tuition');
     }
 
     function sleep(ms) {
@@ -134,25 +139,35 @@
     //   //load_scene_two();
     // }
 
-    async function load_scene_one(){
+    async function load_scene_one(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene one: ";
-      // Create graph buttons
+      // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
-      var graph_button = make_button("Tuition");
-      document.getElementById("graph_buttons").appendChild(graph_button);
-      var graph_button = make_button("State Appropriations");
-      document.getElementById("graph_buttons").appendChild(graph_button);
-      var graph_button = make_button("Repay Rate");
-      document.getElementById("graph_buttons").appendChild(graph_button);
+      document.getElementById("graph_buttons").appendChild(make_button("Tuition"));
+      document.getElementById("graph_buttons").appendChild(make_button("State Appropriations"));
+      document.getElementById("graph_buttons").appendChild(make_button("Repay Rate"));
       // Update nav buttons
       document.getElementById("previous").setAttribute("onclick", "");
       document.getElementById("next").setAttribute("onclick", "load_scene_two()");
 
-      // Set SVG vars, frame and reset the canvas, and create axis vars
-      var height = 350
-      var width = 500
-      var margin = 70
+      // Set SVG vars
+      console.log(summary_data) // this seems fine
+      var y_data;
+      if(dataset == 'tuition') {
+        console.log("tuition!")
+        y_data = summary_data.meanTuition_byYear;
+      } else if (dataset == 'approp') {
+        y_data = summary_data.meanStateApprop_byYear;
+      } else {
+        y_data = summary_data.meanRepayRate_byYear;
+      }
+      console.log(y_data); // this is undefined
+      var height = 350;
+      var width = 500;
+      var margin = 70;
+
+      // Frame and reset the canvas and create axis vars
       d3.selectAll("svg")
           .attr("width", width + margin * 2)
           .attr("height", height + margin * 2)
@@ -216,7 +231,7 @@
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene two: ";
       // Update buttons
-      document.getElementById("previous").setAttribute("onclick", "load_scene_one()");
+      document.getElementById("previous").setAttribute("onclick", "load_scene_one('tuition')");
       document.getElementById("next").setAttribute("onclick", "load_scene_three()");
 
       var data = [4,8,15,16,23,42];
