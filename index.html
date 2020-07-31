@@ -65,8 +65,12 @@
       var graph_button = document.createElement("button");
       graph_button.innerHTML = text;
       graph_button.onclick = function(event) {
-        return load_scene_one.call(this, dataset)
-        };
+        if (dataset == 'tuition' || dataset == 'approp' || dataset == 'repay'){
+          return load_scene_one.call(this, dataset)
+        } else if (dataset == 'high_inc' || dataset == 'low_inc') {
+          return load_scene_two.call(this, dataset)
+        }  
+      };
       // style
       graph_button.style.fontSize = '12px';
       graph_button.style.padding = '4px 8px';
@@ -129,8 +133,7 @@
           .range([height, 0]);
       
       // Filter data for the line plot so we have one value per year
-      var filtered = summary_data.
-          filter(function(d) { 
+      var filtered = summary_data.filter(function(d) { 
             return (d.repay_rate_category == 'repay_rate_hilodiff' && d.state_abbr == 'WI')}
             );
       
@@ -155,7 +158,7 @@
         .transition()
           .duration(1500)
           .ease(d3.easeCubic)
-          .delay(1010)
+          .delay(1000)
           .attr("stroke-dashoffset", 0);
       d3.selectAll("svg").append("g")
           .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
@@ -168,8 +171,7 @@
           .transition()
           .duration(500)
           .call(d3.axisLeft(y))
-          .selectAll(".tick text")
-            .attr("font-size", "11");
+          .selectAll(".tick text").attr("font-size", "11");
       
       // Add x axis label
       d3.selectAll("svg")
@@ -202,8 +204,8 @@
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
-      document.getElementById("graph_buttons")
-          .appendChild(make_button("Both", 'both'));
+      // document.getElementById("graph_buttons")
+      //     .appendChild(make_button("Both", 'both'));
       document.getElementById("graph_buttons")
           .appendChild(make_button("High Income", 'high_inc'));
       document.getElementById("graph_buttons")
@@ -219,6 +221,7 @@
       var height = 350;
       var width = 1000;
       var margin = 100;
+      var y_ax;
 
       // Frame and reset the canvas and create axis vars
       d3.selectAll("svg")
@@ -235,28 +238,28 @@
             .range([0, width])
             .padding(0.1);
       var y = d3.scaleLinear()
-          .domain([0,0.9])
+          .domain([0.25, 0.9])
           .range([height, 0]);
-
+      var count = 1;
       for (year of years) {
         // Filter data for the line plot so we have one value per year, state, and income
         var filtered;
         if (dataset == 'high_inc') {
-          filtered = summary_data.
-            filter(function(d) { 
+          filtered = summary_data.filter(function(d) { 
               return (d.repay_rate_category == 'repay_rate_highincome' && +d.year == year)}
             );
+          y_ax = "Repay Rate (High Income Families)";
         } else if (dataset == 'low_inc') {
-          filtered = summary_data.
-            filter(function(d) { 
+          filtered = summary_data.filter(function(d) { 
               return (d.repay_rate_category == 'repay_rate_lowincome' && +d.year == year)}
             );
+          y_ax = "Repay Rate (Low Income Families)";
         }
-        load_barplot_year(filtered, year, x, y)
-        await sleep(1000);
+        load_barplot_year(filtered, year, x, y, count)
+        count = count + 1;
       }
 
-      function load_barplot_year(filtered, year, x, y) {
+      function load_barplot_year(){
         var rates = d3.map(filtered, function(d){return(d.meanRepayRate_byYearStateAndIncome)}).keys();
         if (year == "2007") {
           // Append new group and transform
@@ -265,20 +268,45 @@
           // Create axes
           d3.selectAll("svg").append("g")
             .attr("transform","translate("+margin+","+margin+")")
-            .call(d3.axisLeft(y));
+            .call(d3.axisLeft(y))
+            .selectAll(".tick text").attr("font-size", "11");
           d3.selectAll("svg").append("g")
             .attr("transform","translate("+margin+","+(height+margin)+")")
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x))
+            .selectAll(".tick text").attr("font-size", "11");
+          // Add x axis label
+          d3.selectAll("svg")
+              .append("text")
+              .attr("transform", "translate(0," + (height + 1.5*margin) + ")")
+              .transition()
+              .ease(d3.easeBounce)
+              .duration(1000)
+              .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
+              .style("text-anchor", "middle")
+              .text("State");
+          // Add y axis label
+          d3.selectAll("svg")
+              .append("text")
+              .attr("transform", "translate(0," + (height + margin) + ")rotate(-90)")
+              .transition()
+              .ease(d3.easeBounce)
+              .duration(1000)
+              .attr("y", 0)
+              .attr("x", (height/2))
+              .attr("dy", "1em")
+              .style("text-anchor", "middle")
+              .text(y_ax)
         }
         update = d3.selectAll("svg").select("g").selectAll("rect")
             .data(filtered)
         update.enter().append("rect").merge(update)
-            .transition().duration(1000)
+            .transition().duration(800).ease(d3.easeCubic)
             .attr("x", function(d) {return x(d.state_abbr);})
             .attr("y", function(d) {return y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("width", x.bandwidth)
             .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("fill", "steelblue")
+            .delay(count*1000)
       }
     }
 
