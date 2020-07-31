@@ -30,7 +30,7 @@
     <div class="nav">
       <button class="nav_button" id="previous" onclick="">Previous</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_one('tuition')">1</button>
-      <button class="nav_button" id="nav_button" onclick="load_scene_two()">2</button>
+      <button class="nav_button" id="nav_button" onclick="load_scene_two('high_inc')">2</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_three()">3</button>
       <button class="nav_button" id="next" onclick="">Next</button>
     </div>
@@ -92,7 +92,7 @@
 
       // Update nav buttons
       document.getElementById("previous").setAttribute("onclick", "");
-      document.getElementById("next").setAttribute("onclick", "load_scene_two()");
+      document.getElementById("next").setAttribute("onclick", "load_scene_two('high_inc')");
 
       // Set SVG vars
       var y_data;
@@ -196,7 +196,7 @@
     }
 
     //------======= LOAD SCENE TWO ======------//
-    async function load_scene_two(){
+    async function load_scene_two(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene two: ";
 
@@ -227,53 +227,59 @@
           .selectAll("*")
           .remove();
             
-      // Filter data for the line plot so we have one value per year, state, and income
-      // if(dataset == 'both') {
-      //   // Filter
-      // } else if (dataset == 'high_inc') {
-      //   // Filter
-      // } else if (dataset == 'low_inc') {
-      //   // Filter
-      // }
-      
-      // Just getting a simple bar chart up first, for high income folks in 2007
-      var filtered = summary_data.
-          filter(function(d) { 
-            return (d.repay_rate_category == 'repay_rate_highincome' && +d.year == 2007)}
-            );
-      var states = d3.map(filtered, function(d){return(d.state_abbr)}).keys();
-      var rates = d3.map(filtered, function(d){return(d.meanRepayRate_byYearStateAndIncome)}).keys();
+      // Get arrays for years and states
+      var years = d3.map(summary_data, function(d){return(d.year)}).keys();
+      var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
       var x = d3.scaleBand()
-          .domain(states)
-          .range([0, width])
-          .padding(0.1);
+            .domain(states)
+            .range([0, width])
+            .padding(0.1);
       var y = d3.scaleLinear()
           .domain([0,0.9])
           .range([height, 0]);
 
-      console.log(filtered)
-      console.log(states)
-      console.log(rates)
-      d3.selectAll("svg").append("g")
-          .attr("transform","translate("+margin+","+margin+")")
-          .selectAll("rect").data(filtered).enter().append("rect")
+      for (year of years) {
+        // Filter data for the line plot so we have one value per year, state, and income
+        var filtered;
+        if (dataset == 'high_inc') {
+          filtered = summary_data.
+            filter(function(d) { 
+              return (d.repay_rate_category == 'repay_rate_highincome' && +d.year == year)}
+            );
+        } else if (dataset == 'low_inc') {
+          filtered = summary_data.
+            filter(function(d) { 
+              return (d.repay_rate_category == 'repay_rate_lowincome' && +d.year == year)}
+            );
+        }
+        load_barplot_year(filtered, year, x, y)
+        await sleep(1000);
+      }
+
+      function load_barplot_year(filtered, year, x, y) {
+        var rates = d3.map(filtered, function(d){return(d.meanRepayRate_byYearStateAndIncome)}).keys();
+        if (year == "2007") {
+          // Append new group and transform
+          d3.selectAll("svg").append("g")
+            .attr("transform","translate("+margin+","+margin+")")
+          // Create axes
+          d3.selectAll("svg").append("g")
+            .attr("transform","translate("+margin+","+margin+")")
+            .call(d3.axisLeft(y));
+          d3.selectAll("svg").append("g")
+            .attr("transform","translate("+margin+","+(height+margin)+")")
+            .call(d3.axisBottom(x));
+        }
+        update = d3.selectAll("svg").select("g").selectAll("rect")
+            .data(filtered)
+        update.enter().append("rect").merge(update)
+            .transition().duration(1000)
             .attr("x", function(d) {return x(d.state_abbr);})
             .attr("y", function(d) {return y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("width", x.bandwidth)
             .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("fill", "steelblue")
-
-      d3.selectAll("svg").append("g")
-          .attr("transform","translate("+margin+","+margin+")")
-          .call(d3.axisLeft(y));
-
-      d3.selectAll("svg").append("g")
-          .attr("transform","translate("+margin+","+(height+margin)+")")
-          .call(d3.axisBottom(x));
-
-
-
-      //await sleep(1000);
+      }
     }
 
     // async function print_state_abbreviations_and_wait(){
@@ -300,7 +306,7 @@
       // Set graph buttons for this scene
 
       // Update nav buttons
-      document.getElementById("previous").setAttribute("onclick", "load_scene_two()");
+      document.getElementById("previous").setAttribute("onclick", "load_scene_two('high_inc')");
       document.getElementById("next").setAttribute("onclick", "");
 
 
