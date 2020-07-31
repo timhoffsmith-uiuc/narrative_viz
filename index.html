@@ -92,7 +92,7 @@
   </div>    
 
   <script>
-    let summary_data = null
+    //let summary_data = null
     async function init() {
       summary_data = await d3.csv('data/preprocessed_summ_vars.csv',
         function(d){
@@ -112,9 +112,14 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function make_button(text) {
+    function make_button(text, dataset) {
+      // create button, add function call
       var graph_button = document.createElement("button");
       graph_button.innerHTML = text;
+      graph_button.onclick = function(event) {
+        return load_scene_one.call(this, dataset)
+        };
+      // style
       graph_button.style.fontSize = '12px';
       graph_button.style.padding = '4px 8px';
       graph_button.style.borderRadius = '4px';
@@ -142,30 +147,39 @@
     async function load_scene_one(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene one: ";
+
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
-      document.getElementById("graph_buttons").appendChild(make_button("Tuition"));
-      document.getElementById("graph_buttons").appendChild(make_button("State Appropriations"));
-      document.getElementById("graph_buttons").appendChild(make_button("Repay Rate"));
+      document.getElementById("graph_buttons")
+          .appendChild(make_button("Tuition", 'tuition'));
+      document.getElementById("graph_buttons")
+          .appendChild(make_button("State Appropriations", 'approp'));
+      document.getElementById("graph_buttons")
+          .appendChild(make_button("Repay Rate", 'repay'));
+
       // Update nav buttons
       document.getElementById("previous").setAttribute("onclick", "");
       document.getElementById("next").setAttribute("onclick", "load_scene_two()");
 
       // Set SVG vars
-      console.log(summary_data) // this seems fine
       var y_data;
+      var y_min;
       if(dataset == 'tuition') {
-        console.log("tuition!")
-        y_data = summary_data.meanTuition_byYear;
+        y_data = 'meanTuition_byYear';
+        y_min = 3000
+        y_ax = "Tuition"
       } else if (dataset == 'approp') {
-        y_data = summary_data.meanStateApprop_byYear;
-      } else {
-        y_data = summary_data.meanRepayRate_byYear;
+        y_data = 'meanStateApprop_byYear';
+        y_min = 60000000
+        y_ax = "State Appropriations"
+      } else if (dataset == 'repay') {
+        y_data = 'meanRepayRate_byYear';
+        y_min = 0.4
+        y_ax = "Repayment Rate"
       }
-      console.log(y_data); // this is undefined
       var height = 350;
       var width = 500;
-      var margin = 70;
+      var margin = 100;
 
       // Frame and reset the canvas and create axis vars
       d3.selectAll("svg")
@@ -177,7 +191,7 @@
           .domain(d3.extent(summary_data, function(d) { return +d.year }))
           .range([0, width]);
       var y = d3.scaleLinear()
-          .domain([3000, d3.max(summary_data, function(d) { return +d.meanTuition_byYear; })])
+          .domain([y_min, (d3.max(summary_data, function(d) { return +d[y_data]; }) * 1.1 )])
           .range([height, 0]);
       
       // Filter data for the line plot so we have one value per year
@@ -186,8 +200,8 @@
             return (d.repay_rate_category == 'repay_rate_hilodiff' && d.state_abbr == 'WI')}
             );
       
-      // Draw the line plot and add axes
-      d3.selectAll("svg").append("g")
+      // Get path length for animation
+      var path = d3.selectAll("svg").append("g")
           .attr("tranform", "translate(" + margin + ", " + margin + ")")
           .selectAll("path").data(filtered).enter().append("path")
             .attr("fill", "none")
@@ -196,8 +210,18 @@
             .datum(filtered)
             .attr("d", d3.line()
               .x(function(d) { return margin + x(d.year); })
-              .y(function(d) { return margin + y(d.meanTuition_byYear); })
+              .y(function(d) { return margin + y(d[y_data]); })
               );
+      var path_length = path.node().getTotalLength();
+      
+      // Draw the line and add axes
+      path
+        .attr("stroke-dasharray", path_length + " " + path_length)
+        .attr("stroke-dashoffset", path_length)
+        .transition()
+          .duration(2000)
+          .ease(d3.easeLinear)
+          .attr("stroke-dashoffset", 0);
       d3.selectAll("svg").append("g")
           .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
           .call(d3.axisBottom(x))
@@ -205,14 +229,16 @@
       d3.selectAll("svg").append("g")
           .attr("transform", "translate(" + margin + ", " + margin +")")
           .call(d3.axisLeft(y))
-          .selectAll(".tick text").attr("font-size", "11");
+          .selectAll(".tick text")
+            .attr("font-size", "11");
       
-      // Add axis labels
+      // Add x axis label
       d3.selectAll("svg")
           .append("text")
-          .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 2*margin) + ")")
+          .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
           .style("text-anchor", "middle")
           .text("Year");
+      // Add y axis label
       d3.selectAll("svg")
           .append("text")
           .attr("transform", "rotate(-90)")
@@ -220,7 +246,7 @@
           .attr("x", 0 - (height/2 + margin))
           .attr("dy", "1em")
           .style("text-anchor", "middle")
-          .text("Mean Tuition")
+          .text(y_ax)
 
       //await sleep(1000);
       //load_scene_two();
