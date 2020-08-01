@@ -31,7 +31,7 @@
       <button class="nav_button" id="previous" onclick="">Previous</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_one('tuition')">1</button>
       <button class="nav_button" id="nav_button" onclick="load_scene_two('high_inc')">2</button>
-      <button class="nav_button" id="nav_button" onclick="load_scene_three()">3</button>
+      <button class="nav_button" id="nav_button" onclick="load_scene_three('tuition_by_repay')">3</button>
       <button class="nav_button" id="next" onclick="">Next</button>
     </div>
   </div>    
@@ -49,7 +49,10 @@
               meanRepayRate_byYear : d.meanRepayRate_byYear,
               meanRepayRate_byYearStateAndIncome : d.meanRepayRate_byYearStateAndIncome,
               repay_rate_category : d.repay_rate_category,
-              state_abbr : d.state_abbr
+              state_abbr : d.state_abbr,
+              meanTuition_byState : d.meanTuition_byState,
+              meanStateApprop_byState : d.meanStateApprop_byState,
+              meanRepayRate_byStateAndIncome : d.meanRepayRate_byStateAndIncome
           }
         }
       );
@@ -66,10 +69,12 @@
       graph_button.innerHTML = text;
       graph_button.onclick = function(event) {
         if (dataset == 'tuition' || dataset == 'approp' || dataset == 'repay'){
-          return load_scene_one.call(this, dataset)
+          return load_scene_one.call(this, dataset);
         } else if (dataset == 'high_inc' || dataset == 'low_inc') {
-          return load_scene_two.call(this, dataset)
-        }  
+          return load_scene_two.call(this, dataset);
+        } else if (dataset == 'tuition_by_repay' || dataset == 'approp_by_repay') {
+          return load_scene_three.call(this, dataset);
+        }
       };
       // style
       graph_button.style.fontSize = '12px';
@@ -80,7 +85,9 @@
       return graph_button;
     }
 
+    //=========================================//
     //------======= LOAD SCENE ONE ======------//
+    //=========================================//
     async function load_scene_one(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene one: ";
@@ -124,7 +131,6 @@
           .attr("height", height + margin * 2)
           .selectAll("*")
           .remove();
-      //var x = d3.scaleTime()
       var x = d3.scaleLinear()
           .domain(d3.extent(summary_data, function(d) { return +d.year }))
           .range([0, width]);
@@ -194,10 +200,12 @@
           .attr("x", (height/2))
           .attr("dy", "1em")
           .style("text-anchor", "middle")
-          .text(y_ax)
+          .text(y_ax);
     }
 
+    //=========================================//
     //------======= LOAD SCENE TWO ======------//
+    //=========================================//
     async function load_scene_two(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene two: ";
@@ -213,7 +221,7 @@
 
       // Update nav buttons
       document.getElementById("previous").setAttribute("onclick", "load_scene_one('tuition')");
-      document.getElementById("next").setAttribute("onclick", "load_scene_three()");
+      document.getElementById("next").setAttribute("onclick", "load_scene_three('tuition_by_repay')");
 
       // Set SVG vars
       var y_data = 'meanRepayRate_byYearStateAndIncome';
@@ -234,9 +242,9 @@
       var years = d3.map(summary_data, function(d){return(d.year)}).keys();
       var states = d3.map(summary_data, function(d){return(d.state_abbr)}).keys();
       var x = d3.scaleBand()
-            .domain(states)
-            .range([0, width])
-            .padding(0.1);
+          .domain(states)
+          .range([0, width])
+          .padding(0.1);
       var y = d3.scaleLinear()
           .domain([0.25, 0.9])
           .range([height, 0]);
@@ -264,14 +272,18 @@
         if (year == "2007") {
           // Append new group and transform
           d3.selectAll("svg").append("g")
-            .attr("transform","translate("+margin+","+margin+")")
+            .attr("transform","translate("+margin+","+margin+")");
           // Create axes
           d3.selectAll("svg").append("g")
             .attr("transform","translate("+margin+","+margin+")")
+            .transition()
+            .duration(500)
             .call(d3.axisLeft(y))
             .selectAll(".tick text").attr("font-size", "11");
           d3.selectAll("svg").append("g")
             .attr("transform","translate("+margin+","+(height+margin)+")")
+            .transition()
+            .duration(500)
             .call(d3.axisBottom(x))
             .selectAll(".tick text").attr("font-size", "11");
           // Add x axis label
@@ -295,10 +307,10 @@
               .attr("x", (height/2))
               .attr("dy", "1em")
               .style("text-anchor", "middle")
-              .text(y_ax)
+              .text(y_ax);
         }
         update = d3.selectAll("svg").select("g").selectAll("rect")
-            .data(filtered)
+            .data(filtered);
         update.enter().append("rect").merge(update)
             .transition().duration(800).ease(d3.easeCubic)
             .attr("x", function(d) {return x(d.state_abbr);})
@@ -306,8 +318,112 @@
             .attr("width", x.bandwidth)
             .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("fill", "steelblue")
-            .delay(count*1000)
+            .delay(count*1000);
       }
+    }
+
+    //=========================================//
+    //------======= LOAD SCENE THREE ======------//
+    //=========================================//
+    async function load_scene_three(dataset){
+      // Set scene title
+      document.getElementById("scene_label").innerHTML = "This is scene three: ";
+
+      // Set graph buttons for this scene
+      document.getElementById("graph_buttons").innerHTML = "";
+      document.getElementById("graph_buttons")
+          .appendChild(make_button("Tuition", 'tuition_by_repay'));
+      document.getElementById("graph_buttons")
+          .appendChild(make_button("State Appropriations", 'approp_by_repay'));
+
+      // Update nav buttons
+      document.getElementById("previous").setAttribute("onclick", "load_scene_two('high_inc')");
+      document.getElementById("next").setAttribute("onclick", "");
+
+      // Set SVG vars
+      var x_min = 0;
+      var x_max = 0.4;
+      var y_min = 0;
+      var y_max = 0.4;
+      var height = 350;
+      var width = 500;
+      var margin = 100;
+      var y_data;
+      var y_ax;
+
+      if(dataset == 'tuition_by_repay') {
+        y_data = 'meanTuition_byState';
+        y_ax = "Tuition"
+      } else if (dataset == 'approp_by_repay') {
+        y_data = 'meanStateApprop_byState';
+        y_ax = "State Appropriations"
+      }
+
+      // Frame and reset the canvas and create axis vars
+      d3.selectAll("svg")
+          .attr("width", width + margin * 2)
+          .attr("height", height + margin * 2)
+          .selectAll("*")
+          .remove();
+
+      var x = d3.scaleLinear()
+          .domain([x_min, x_max])
+          .range([0, width]);
+      var y = d3.scaleLinear()
+          .domain([y_min, (d3.max(summary_data, function(d) { return +d[y_data]; }) * 1.1 )])
+          .range([height, 0]);
+
+      // Filter data for the scatter plot so we have one value per state
+      var filtered = summary_data.filter(function(d) { 
+            return (d.repay_rate_category == 'repay_rate_hilodiff' && +d.year == 2014);
+            });
+
+      update = d3.selectAll("svg").append("g")
+          .attr("transform","translate("+margin+","+margin+")")
+          .selectAll("circle").data(filtered).enter().append("circle")
+          .attr("fill", "steelblue")
+          .attr("stroke", "blue");
+      update.enter().append("circle").merge(update)
+          .transition().delay(800).duration(800).ease(d3.easeCubic)
+          .attr("cx", function(d) {return x(d.meanRepayRate_byStateAndIncome);})
+          .attr("cy", function(d) {return y(+d[y_data]);})
+          .attr("r", function(d) {return 3;});
+
+      // Create axes
+      d3.selectAll("svg").append("g")
+          .attr("transform","translate("+margin+","+margin+")")
+          .transition().duration(500)
+          .call(d3.axisLeft(y))
+          .selectAll(".tick text").attr("font-size", "11");
+      d3.selectAll("svg").append("g")
+          .attr("transform","translate("+margin+","+(height+margin)+")")
+          .transition().duration(500)
+          .call(d3.axisBottom(x))
+          .selectAll(".tick text").attr("font-size", "11");
+
+      // Add x axis label
+      d3.selectAll("svg")
+          .append("text")
+          .attr("transform", "translate(0," + (height + 1.5*margin) + ")")
+          .transition()
+          .ease(d3.easeBounce)
+          .duration(1000)
+          .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
+          .style("text-anchor", "middle")
+          .text("Difference in Repayment Rate (High vs. Low Income)");
+      // Add y axis label
+      d3.selectAll("svg")
+          .append("text")
+          .attr("transform", "translate(0," + (height + margin) + ")rotate(-90)")
+          .transition()
+          .ease(d3.easeBounce)
+          .duration(1000)
+          .attr("y", 0)
+          .attr("x", (height/2))
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .text(y_ax);
+
     }
 
     // async function print_state_abbreviations_and_wait(){
@@ -325,21 +441,6 @@
     //   //await sleep(1000);
     // }
 
-    //------======= LOAD SCENE THREE ======------//
-    async function load_scene_three(){
-      d3.selectAll("svg").selectAll("*").remove()
-      // Set scene title
-      document.getElementById("scene_label").innerHTML = "This is scene three: ";
-
-      // Set graph buttons for this scene
-
-      // Update nav buttons
-      document.getElementById("previous").setAttribute("onclick", "load_scene_two('high_inc')");
-      document.getElementById("next").setAttribute("onclick", "");
-
-
-    }
-    
   </script>
 
 </html>
