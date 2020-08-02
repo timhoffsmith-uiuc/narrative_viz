@@ -19,6 +19,7 @@
 
     <p class="graph_elements" id="graph_buttons"></p>
       <div class="drawing">
+        <div id="tooltip" class="tooltip" opacity=0></div>
         <svg>
         </svg>
       </div>
@@ -246,7 +247,8 @@
               .style("text-anchor", "middle")
               .text(year);
         }
-        update = d3.selectAll("svg").select("g").selectAll("rect")
+        // Transition to new rect
+        var update = d3.selectAll("svg").select("g").selectAll("rect")
             .data(filtered);
         update.enter().append("rect").merge(update)
             .transition().duration(500).ease(d3.easeLinear)
@@ -256,6 +258,7 @@
             .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("fill", "steelblue")
             .delay(count*1500);
+        
         // Transition header
         header.enter().append("text").merge(header)
             .transition()
@@ -332,7 +335,23 @@
           .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
           .style("text-anchor", "middle")
           .text("State");
+
+      // Load the bar plot animation, then add tooltips
       load_barplot_year(dataset, years, height, width, margin, x, y);
+      var tooltip = d3.select("#tooltip");
+      d3.selectAll("svg").selectAll("g").selectAll("rect")
+          .on("mouseover", function(d, i) {
+              tooltip.style("opacity", 1)
+                .style("left", (d3.event.pageX+20)+"px")
+                .style("top", (d3.event.pageY-30)+"px")
+                .style("left", (d3.mouse(this)[0]+350) + "px")
+                .style("top", (d3.mouse(this)[1]+250) + "px")
+                .html("'14 Repay Rate in " + d.state_abbr + ":</br>"
+                    + Math.round((+d.meanRepayRate_byYearStateAndIncome + Number.EPSILON) * 100) / 100);
+              })
+          .on("mouseout", function() {
+              tooltip.style("opacity", 0)
+              });
     }
 
     //=========================================//
@@ -401,6 +420,28 @@
           .attr("cx", function(d) {return x(d.meanRepayRate_byStateAndIncome);})
           .attr("cy", function(d) {return y(+d[y_data]);})
           .attr("r", function(d) {return 3;});
+      var tooltip = d3.select("#tooltip");
+      d3.selectAll("svg").selectAll("g").selectAll("circle")
+          .on("mouseover", function(d, i) {
+              d3.select(this).transition()
+                .duration('100')
+                .attr("r", 5);
+              tooltip.style("opacity", 1)
+                .style("left", (d3.event.pageX+60)+"px")
+                .style("top", (d3.event.pageY-10)+"px")
+                .style("left", (d3.mouse(this)[0]+600) + "px")
+                .style("top", (d3.mouse(this)[1]+250) + "px")
+                .html(d.state_abbr + " " + y_ax + ": " + Math.round(d[y_data])
+                    + "</br>Repay Rate Diff: "
+                    + Math.round((+d.meanRepayRate_byStateAndIncome + Number.EPSILON) * 100) / 100
+                    );
+              })
+          .on("mouseout", function() {
+              d3.select(this).transition()
+                .duration('100')
+                .attr("r", 3);
+              tooltip.style("opacity", 0)
+              });
 
       // Create axes
       d3.selectAll("svg").append("g")
