@@ -97,7 +97,7 @@
       document.getElementById("graph_buttons")
           .appendChild(make_button("Tuition", 'tuition'));
       document.getElementById("graph_buttons")
-          .appendChild(make_button("State Appropriations", 'approp'));
+          .appendChild(make_button("State Funding", 'approp'));
       document.getElementById("graph_buttons")
           .appendChild(make_button("Repay Rate", 'repay'));
 
@@ -115,7 +115,7 @@
       } else if (dataset == 'approp') {
         y_data = 'meanStateApprop_byYear';
         y_min = 60000000
-        y_ax = "State Appropriations"
+        y_ax = "State Funding"
       } else if (dataset == 'repay') {
         y_data = 'meanRepayRate_byYear';
         y_min = 0.4
@@ -206,14 +206,71 @@
     //=========================================//
     //------======= LOAD SCENE TWO ======------//
     //=========================================//
+    function load_barplot_year(dataset, years, height, width, margin, x, y){
+      d3.selectAll("svg").select("g").selectAll("rect").remove();
+      var count = 1;
+      for (year of years) {
+        // Filter data for the bar plot so we have one value per year, state, and income
+        var filtered;
+        if (dataset == 'high_inc') {
+          filtered = summary_data.filter(function(d) { 
+              return (d.repay_rate_category == 'repay_rate_highincome' && +d.year == year)}
+            );
+          y_ax = "Repay Rate (High Income Families)";
+        } else if (dataset == 'low_inc') {
+          filtered = summary_data.filter(function(d) { 
+              return (d.repay_rate_category == 'repay_rate_lowincome' && +d.year == year)}
+            );
+          y_ax = "Repay Rate (Low Income Families)";
+        }
+        
+        var rates = d3.map(filtered, function(d){return(d.meanRepayRate_byYearStateAndIncome)}).keys();
+        if (year == "2007") {
+          // Add y axis label
+          d3.selectAll("svg")
+              .append("text")
+              .attr("transform", "translate(0," + (height + margin) + ")rotate(-90)")
+              .transition()
+              .ease(d3.easeBounce)
+              .duration(1000)
+              .attr("y", 0)
+              .attr("x", (height/2))
+              .attr("dy", "1em")
+              .style("text-anchor", "middle")
+              .text(y_ax);
+          // Add header for year
+          header = d3.selectAll("svg").append("g")
+              .append("text")
+              .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
+              .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
+              .style("text-anchor", "middle")
+              .text(year);
+        }
+        update = d3.selectAll("svg").select("g").selectAll("rect")
+            .data(filtered);
+        update.enter().append("rect").merge(update)
+            .transition().duration(500).ease(d3.easeLinear)
+            .attr("x", function(d) {return x(d.state_abbr);})
+            .attr("y", function(d) {return y(d.meanRepayRate_byYearStateAndIncome);})
+            .attr("width", x.bandwidth)
+            .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
+            .attr("fill", "steelblue")
+            .delay(count*1500);
+        // Transition header
+        header.enter().append("text").merge(header)
+            .transition()
+            .text(year)
+            .delay(count*1500);
+
+        count = count + 1;
+      }
+    }
     async function load_scene_two(dataset){
       // Set scene title
       document.getElementById("scene_label").innerHTML = "This is scene two: ";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
-      // document.getElementById("graph_buttons")
-      //     .appendChild(make_button("Both", 'both'));
       document.getElementById("graph_buttons")
           .appendChild(make_button("High Income", 'high_inc'));
       document.getElementById("graph_buttons")
@@ -248,78 +305,34 @@
       var y = d3.scaleLinear()
           .domain([0.25, 0.9])
           .range([height, 0]);
-      var count = 1;
-      for (year of years) {
-        // Filter data for the line plot so we have one value per year, state, and income
-        var filtered;
-        if (dataset == 'high_inc') {
-          filtered = summary_data.filter(function(d) { 
-              return (d.repay_rate_category == 'repay_rate_highincome' && +d.year == year)}
-            );
-          y_ax = "Repay Rate (High Income Families)";
-        } else if (dataset == 'low_inc') {
-          filtered = summary_data.filter(function(d) { 
-              return (d.repay_rate_category == 'repay_rate_lowincome' && +d.year == year)}
-            );
-          y_ax = "Repay Rate (Low Income Families)";
-        }
-        load_barplot_year(filtered, year, x, y, count)
-        count = count + 1;
-      }
 
-      function load_barplot_year(){
-        var rates = d3.map(filtered, function(d){return(d.meanRepayRate_byYearStateAndIncome)}).keys();
-        if (year == "2007") {
-          // Append new group and transform
-          d3.selectAll("svg").append("g")
-            .attr("transform","translate("+margin+","+margin+")");
-          // Create axes
-          d3.selectAll("svg").append("g")
-            .attr("transform","translate("+margin+","+margin+")")
-            .transition()
-            .duration(500)
-            .call(d3.axisLeft(y))
-            .selectAll(".tick text").attr("font-size", "11");
-          d3.selectAll("svg").append("g")
-            .attr("transform","translate("+margin+","+(height+margin)+")")
-            .transition()
-            .duration(500)
-            .call(d3.axisBottom(x))
-            .selectAll(".tick text").attr("font-size", "11");
-          // Add x axis label
-          d3.selectAll("svg")
-              .append("text")
-              .attr("transform", "translate(0," + (height + 1.5*margin) + ")")
-              .transition()
-              .ease(d3.easeBounce)
-              .duration(1000)
-              .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
-              .style("text-anchor", "middle")
-              .text("State");
-          // Add y axis label
-          d3.selectAll("svg")
-              .append("text")
-              .attr("transform", "translate(0," + (height + margin) + ")rotate(-90)")
-              .transition()
-              .ease(d3.easeBounce)
-              .duration(1000)
-              .attr("y", 0)
-              .attr("x", (height/2))
-              .attr("dy", "1em")
-              .style("text-anchor", "middle")
-              .text(y_ax);
-        }
-        update = d3.selectAll("svg").select("g").selectAll("rect")
-            .data(filtered);
-        update.enter().append("rect").merge(update)
-            .transition().duration(800).ease(d3.easeCubic)
-            .attr("x", function(d) {return x(d.state_abbr);})
-            .attr("y", function(d) {return y(d.meanRepayRate_byYearStateAndIncome);})
-            .attr("width", x.bandwidth)
-            .attr("height", function(d) {return height - y(d.meanRepayRate_byYearStateAndIncome);})
-            .attr("fill", "steelblue")
-            .delay(count*1000);
-      }
+      // Append new group and transform
+      d3.selectAll("svg").append("g")
+        .attr("transform","translate("+margin+","+margin+")");
+      // Create axes
+      d3.selectAll("svg").append("g")
+        .attr("transform","translate("+margin+","+margin+")")
+        .transition()
+        .duration(500)
+        .call(d3.axisLeft(y))
+        .selectAll(".tick text").attr("font-size", "11");
+      d3.selectAll("svg").append("g")
+        .attr("transform","translate("+margin+","+(height+margin)+")")
+        .transition()
+        .duration(500)
+        .call(d3.axisBottom(x))
+        .selectAll(".tick text").attr("font-size", "11");
+      // Add x axis label
+      d3.selectAll("svg")
+          .append("text")
+          .attr("transform", "translate(0," + (height + 1.5*margin) + ")")
+          .transition()
+          .ease(d3.easeBounce)
+          .duration(1000)
+          .attr("transform", "translate(" + (width/2 + margin) + "," + (height + 1.5*margin) + ")")
+          .style("text-anchor", "middle")
+          .text("State");
+      load_barplot_year(dataset, years, height, width, margin, x, y);
     }
 
     //=========================================//
@@ -334,7 +347,7 @@
       document.getElementById("graph_buttons")
           .appendChild(make_button("Tuition", 'tuition_by_repay'));
       document.getElementById("graph_buttons")
-          .appendChild(make_button("State Appropriations", 'approp_by_repay'));
+          .appendChild(make_button("State Funding", 'approp_by_repay'));
 
       // Update nav buttons
       document.getElementById("previous").setAttribute("onclick", "load_scene_two('high_inc')");
@@ -356,7 +369,7 @@
         y_ax = "Tuition"
       } else if (dataset == 'approp_by_repay') {
         y_data = 'meanStateApprop_byState';
-        y_ax = "State Appropriations"
+        y_ax = "State Funding ($)"
       }
 
       // Frame and reset the canvas and create axis vars
