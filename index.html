@@ -8,13 +8,13 @@
   </head>
 
   <div class="header">
-    <h1>Disparities in Higher Education</h1>
+    <h1>Disparities in Funding and Affordability of Higher Education</h1>
   </div>
 
   <div class="container">
     <body onload="init()">
 
-    <p>Here's a paragraph, followed by some data.</p>
+    <h3 id="subheader">Is a college degree a reliable gateway to the middle class?</h3>
     <p id="scene_label"></p>
 
     <p class="graph_elements" id="graph_buttons"></p>
@@ -91,7 +91,12 @@
     //=========================================//
     async function load_scene_one(dataset){
       // Set scene title
-      document.getElementById("scene_label").innerHTML = "This is scene one: ";
+      document.getElementById("scene_label").innerHTML = 
+          "Before we dive into the details, let's take a look at the general" +
+          " trend in funding of public university across the United States." +
+          " We'll also look at trends in student loan repayment rates as an" +
+          " indicator of how easily students are able to pay off loans once" +
+          " they've graduated and begun to make payments.";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
@@ -245,7 +250,8 @@
               .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
               .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
               .style("text-anchor", "middle")
-              .text(year);
+              .text(year)
+                .attr("font-size", "32px");
         }
         // Transition to new rect
         var update = d3.selectAll("svg").select("g").selectAll("rect")
@@ -270,7 +276,13 @@
     }
     async function load_scene_two(dataset){
       // Set scene title
-      document.getElementById("scene_label").innerHTML = "This is scene two: ";
+      document.getElementById("scene_label").innerHTML = 
+          "Okay, so tuition is going up, state funding is going down, and students" +
+          " are having a harder time paying back loans. But are some students having" +
+          " an easier time? Let's see what repayment rates look like if we break the student population" +
+          " in two and look separately at students with higher family income (over $75,000) versus students with" +
+          " lower family income (less than $30,000). Let's also break the data down by" +
+          " state since we might expect some differences at the state level due to funding.";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
@@ -346,7 +358,7 @@
                 .style("top", (d3.event.pageY-30)+"px")
                 .style("left", (d3.mouse(this)[0]+350) + "px")
                 .style("top", (d3.mouse(this)[1]+250) + "px")
-                .html("'14 Repay Rate in " + d.state_abbr + ":</br>"
+                .html("Latest " + d.state_abbr + " Loan Repayment Rate:</br>"
                     + Math.round((+d.meanRepayRate_byYearStateAndIncome + Number.EPSILON) * 100) / 100);
               })
           .on("mouseout", function() {
@@ -359,7 +371,14 @@
     //=========================================//
     async function load_scene_three(dataset){
       // Set scene title
-      document.getElementById("scene_label").innerHTML = "This is scene three: ";
+      document.getElementById("scene_label").innerHTML = 
+          "Okay, so there's a pretty clear difference in repayment rate between students" +
+          " from higher and lower income families, and it's worse now than it was in 2007." +
+          " But how do we know that difference is related to tuition cost or state funding" +
+          " of univerisites? Well, without directly studying those relationships, we can't" +
+          " really say that one is causing the other. However, let's see whether the difference" +
+          " in repayment rates between students from higher income and lower income families" +
+          " is correlated with tuition costs and state funding.";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
@@ -419,13 +438,14 @@
           .transition().delay(800).duration(800).ease(d3.easeCubic)
           .attr("cx", function(d) {return x(d.meanRepayRate_byStateAndIncome);})
           .attr("cy", function(d) {return y(+d[y_data]);})
-          .attr("r", function(d) {return 3;});
+          .attr("r", function(d) {return 4;});
       var tooltip = d3.select("#tooltip");
       d3.selectAll("svg").selectAll("g").selectAll("circle")
           .on("mouseover", function(d, i) {
               d3.select(this).transition()
                 .duration('100')
-                .attr("r", 5);
+                .attr("r", 7)
+                .attr("fill", "orange");
               tooltip.style("opacity", 1)
                 .style("left", (d3.event.pageX+60)+"px")
                 .style("top", (d3.event.pageY-10)+"px")
@@ -439,7 +459,8 @@
           .on("mouseout", function() {
               d3.select(this).transition()
                 .duration('100')
-                .attr("r", 3);
+                .attr("r", 4)
+                .attr("fill", "steelblue");
               tooltip.style("opacity", 0)
               });
 

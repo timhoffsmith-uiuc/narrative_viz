@@ -1,29 +1,40 @@
 h1 {
-  text-align: center;
-  font-family: Arial;
+    text-align: center;
+    font-family: Arial;
   }
 body {
     padding-right: 50px;
     padding-left: 50px;
-  background-color: #efefef;
-  font-family: Arial;      
+    background-color: #efefef;
+    font-family: Arial;      
   }
 .header {
-  padding-top: 10px;
-  padding-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 20px;
     border-bottom: 1px solid #d5d5d5;
   }
 .container {
-  padding-top: 10px;
-  padding-bottom: 20px;
+    padding-top: 0px;
+    padding-bottom: 20px;
     padding-right: 50px;
     padding-left: 50px;
 }
+#subheader {
+    text-align: center;
+    padding-left: 100px;
+    padding-right: 100px;
+}
+#scene_label {
+    display: flex;
+    justify-content: center;
+    padding-left: 200px;
+    padding-right: 200px;
+}
 p.graph_elements {
-  display: flex;
-  justify-content: center;
-  /* padding-top: 50px;
-    border-top: 1px solid #d5d5d5; */
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+    padding-bottom: 0px;
 }
 .tooltip {
     opacity: 0;
@@ -38,31 +49,31 @@ p.graph_elements {
     font-size: 14px;
 }
 .drawing {
-  display: flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
   }
 .nav {
-  padding-top: 20px;
-  display: flex;
-  justify-content: center;
+    padding-top: 20px;
+    display: flex;
+    justify-content: center;
   }
 .nav_button {
-  font-size: 16px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  border: .5px solid #000000;
-  opacity: 0.8;
+    font-size: 16px;
+    padding: 6px 16px;
+    border-radius: 4px;
+    border: .5px solid #000000;
+    opacity: 0.8;
   }
 .nav_button:hover {
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.24), 0 2px 100px 0 rgba(0,0,0,0.19);
-  opacity: 1;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.24), 0 2px 100px 0 rgba(0,0,0,0.19);
+    opacity: 1;
   }
 .nav_button:active {
-  box-shadow: 0 0px 0px 0 rgba(0,0,0,0.24), 0 0px 0px 0 rgba(0,0,0,0.19);
-  opacity: .8;
+    box-shadow: 0 0px 0px 0 rgba(0,0,0,0.24), 0 0px 0px 0 rgba(0,0,0,0.19);
+    opacity: .8;
   }
 .footer {
-  padding-top: 10px;
-  padding-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 20px;
     border-top: 1px solid #d5d5d5;
   }
