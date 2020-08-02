@@ -17,9 +17,9 @@
     <h3 id="subheader">Is a college degree a reliable gateway to the middle class?</h3>
     <p id="scene_label"></p>
 
+    <div id="tooltip" class="tooltip" opacity=0></div>
     <p class="graph_elements" id="graph_buttons"></p>
       <div class="drawing">
-        <div id="tooltip" class="tooltip" opacity=0></div>
         <svg>
         </svg>
       </div>
@@ -35,6 +35,16 @@
       <button class="nav_button" id="nav_button" onclick="load_scene_three('tuition_by_repay')">3</button>
       <button class="nav_button" id="next" onclick="">Next</button>
     </div>
+    <p class="footerText"><b>For more on disparities in funding and affordability of higher education, see these resources:</b></p>
+      <a href="https://www.urban.org/sites/default/files/publication/96791/tuition_and_state_appropriations_1.pdf">Urban Institute</a>
+      <a href="https://www.pewtrusts.org/~/media/assets/2015/06/federal_state_funding_higher_education_final.pdf">Pew Charitable Trusts</a>
+      <a href="https://www.americanprogress.org/issues/education-postsecondary/news/2017/10/16/440711/new-federal-data-show-student-loan-crisis-african-american-borrowers/">Center for American Progress</a>
+    </p>
+    <p class="footerText">
+    Data Obtained From: Education Data Portal (Version 0.7.1),<br />
+    Urban Institute Center on Education Data and Policy, accessed 6/11/2021.<br />
+    https://educationdata.urban.org/documentation/, College Scorecard.
+    </p>
   </div>    
 
   <script>
@@ -384,7 +394,7 @@
                 .style("left", (d3.event.pageX+20)+"px")
                 .style("top", (d3.event.pageY-30)+"px")
                 .style("left", (d3.mouse(this)[0]+350) + "px")
-                .style("top", (d3.mouse(this)[1]+250) + "px")
+                .style("top", (d3.mouse(this)[1]+300) + "px")
                 .html("Latest " + d.state_abbr + " Loan Repayment Rate:</br>"
                     + Math.round((+d.meanRepayRate_byYearStateAndIncome + Number.EPSILON) * 100) / 100);
               })
@@ -487,7 +497,12 @@
           " of universities? Well, without directly studying those relationships, we can't" +
           " really say that one is causing the other. However, below we can see whether the" +
           " difference in repayment rates between students from higher income and lower" +
-          " income families is correlated with tuition costs and state funding.";
+          " income families is correlated with tuition costs and state funding.<br />" +
+          "Sure enough, in these plots we see that the difference in repayment rates in each state" +
+          " appears to be associated with higher tuition costs and less state funding." +
+          " By hovering the mouse over each state, we can identify several states that support this trend.<br />" +
+          " This preliminary visual analysis suggests that increased tuition costs and reductions" +
+          " in state funding disproportionately harm students from families with less discretionary income.";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
@@ -559,7 +574,7 @@
                 .style("left", (d3.event.pageX+60)+"px")
                 .style("top", (d3.event.pageY-10)+"px")
                 .style("left", (d3.mouse(this)[0]+600) + "px")
-                .style("top", (d3.mouse(this)[1]+250) + "px")
+                .style("top", (d3.mouse(this)[1]+450) + "px")
                 .html("<b>" + d.state_abbr + "</b></br>"
                     + y_ax + ": " + Math.round(d[y_data])
                     + "</br>Repay Rate Diff: "

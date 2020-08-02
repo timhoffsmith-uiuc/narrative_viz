@@ -30,6 +30,11 @@ body {
     padding-left: 200px;
     padding-right: 200px;
 }
+#scene_label br {
+    margin-top: 20px;
+    display: block;
+    line-height:20px; 
+}
 p.graph_elements {
     display: flex;
     justify-content: center;
@@ -54,6 +59,7 @@ p.graph_elements {
   }
 .nav {
     padding-top: 20px;
+    padding-bottom: 10px;
     display: flex;
     justify-content: center;
   }
@@ -76,4 +82,19 @@ p.graph_elements {
     padding-top: 10px;
     padding-bottom: 20px;
     border-top: 1px solid #d5d5d5;
+    text-align: center;
+    font-size: 11px;
   }
+a {
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-top: 1px solid #d5d5d5;
+    border-bottom: 1px solid #d5d5d5;
+  }
+p.footerText {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
