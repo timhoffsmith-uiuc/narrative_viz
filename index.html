@@ -96,7 +96,10 @@
           " trend in funding of public university across the United States." +
           " We'll also look at trends in student loan repayment rates as an" +
           " indicator of how easily students are able to pay off loans once" +
-          " they've graduated and begun to make payments.";
+          " they've graduated and begun to make payments. Repayment rate" +
+          " is the fraction of students who are not in default and have " +
+          " declining loan balances in the first year of repayment," +
+          " excluding deferment.";
 
       // Set graph buttons for this scene
       document.getElementById("graph_buttons").innerHTML = "";
@@ -112,20 +115,21 @@
       document.getElementById("next").setAttribute("onclick", "load_scene_two('high_inc')");
 
       // Set SVG vars
-      var y_data;
-      var y_min;
       if(dataset == 'tuition') {
         y_data = 'meanTuition_byYear';
         y_min = 3000
         y_ax = "Tuition"
+        annotation_text = "Tuition is increasing"
       } else if (dataset == 'approp') {
         y_data = 'meanStateApprop_byYear';
         y_min = 60000000
         y_ax = "State Funding"
+        annotation_text = "State funding is decreasing"
       } else if (dataset == 'repay') {
         y_data = 'meanRepayRate_byYear';
         y_min = 0.4
         y_ax = "Repayment Rate"
+        annotation_text = "Repayment rate is decreasing"
       }
       var height = 350;
       var width = 500;
@@ -207,6 +211,29 @@
           .attr("dy", "1em")
           .style("text-anchor", "middle")
           .text(y_ax);
+
+        // Add annotation
+        d3.selectAll("svg").append("g")
+          .append("text")
+          .transition().ease(d3.easeCubic).duration(500).delay(2500)
+          .attr("transform", "translate(" + (width/3 + margin) + "," + (height/4 + margin) + ")")
+          .style("text-anchor", "middle")
+          .text(annotation_text)
+            .attr("font-size", "12px")
+            .attr("opacity", ".6");
+        // Add annotation line
+        d3.selectAll("svg").append("g")
+          .append("line")
+          .attr("transform", "translate(" + (width/3 + margin) + "," + (height/4 + margin + 15) + ")")
+          .attr("y2", "0")
+          .transition().ease(d3.easeCubic).duration(500).delay(3100)
+          .attr("stroke", "black")
+          .attr('opacity', ".6")
+          .attr("x1", "0")
+          .attr("y1", "0")
+          .attr("x2", "0")
+          .attr("y2", "50");
+
     }
 
     //=========================================//
@@ -248,7 +275,6 @@
           header = d3.selectAll("svg").append("g")
               .append("text")
               .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
-              .attr("transform", "translate(" + (width/2 + margin) + "," + 0.5*margin + ")")
               .style("text-anchor", "middle")
               .text(year)
                 .attr("font-size", "32px");
@@ -257,7 +283,7 @@
         var update = d3.selectAll("svg").select("g").selectAll("rect")
             .data(filtered);
         update.enter().append("rect").merge(update)
-            .transition().duration(500).ease(d3.easeLinear)
+            .transition().duration(500).ease(d3.easeCubic)
             .attr("x", function(d) {return x(d.state_abbr);})
             .attr("y", function(d) {return y(d.meanRepayRate_byYearStateAndIncome);})
             .attr("width", x.bandwidth)
@@ -348,8 +374,9 @@
           .style("text-anchor", "middle")
           .text("State");
 
-      // Load the bar plot animation, then add tooltips
+      // Load the bar plot animation
       load_barplot_year(dataset, years, height, width, margin, x, y);
+      // Then add tooltips
       var tooltip = d3.select("#tooltip");
       d3.selectAll("svg").selectAll("g").selectAll("rect")
           .on("mouseover", function(d, i) {
@@ -364,6 +391,88 @@
           .on("mouseout", function() {
               tooltip.style("opacity", 0)
               });
+      // Add annotations
+      if (dataset == 'high_inc') {
+        var annotation_text_one = "High income students in WY and CA have";
+        var annotation_text_two = " some of the highest repayment rates";
+        var vertical = 30;
+      } else {
+        var annotation_text_one = "Low income students in WY and CA also have";
+        var annotation_text_two = "   comparatively high repayment rates";
+        var vertical = 80;
+      }
+      d3.selectAll("svg").append("g")
+        .append("text")
+        .transition().ease(d3.easeCubic).duration(1500).delay(3000)
+        .attr("transform", "translate(" + (width/4 + margin) + "," + (margin-15) + ")")
+        .style("text-anchor", "middle")
+        .text(annotation_text_one)
+          .attr("font-size", "12px")
+          .attr("opacity", ".6");
+      d3.selectAll("svg").append("g")
+        .append("text")
+        .transition().ease(d3.easeCubic).duration(1500).delay(3000)
+        .attr("transform", "translate(" + (width/4 + margin) + "," + (margin) + ")")
+        .style("text-anchor", "middle")
+        .text(annotation_text_two)
+          .attr("font-size", "12px")
+          .attr("opacity", ".6");
+      // Add annotation lines
+      d3.selectAll("svg").append("g")
+        .append("line")
+        .attr("transform", "translate(" + (width/4 + margin) + "," + (margin + 10) + ")")
+        .attr("y2", "0")
+        .transition().ease(d3.easeLinear).duration(500).delay(6100)
+        .attr("stroke", "black")
+        .attr('opacity', ".6")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", "0")
+        .attr("y2", "15");
+      d3.selectAll("svg").append("g")
+        .append("line")
+        .attr("transform", "translate(" + (width/4 + margin) + "," + (margin + 25) + ")")
+        .attr("x2", "0")
+        .transition().ease(d3.easeLinear).duration(4500).delay(6600)
+        .attr("stroke", "black")
+        .attr('opacity', ".6")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", (width/4*3 - 10))
+        .attr("y2", "0");
+      d3.selectAll("svg").append("g")
+        .append("line")
+        .attr("transform", "translate(" + (width/4 + margin) + "," + (margin + 25) + ")")
+        .attr("x2", "0")
+        .transition().ease(d3.easeLinear).duration(1500).delay(6600)
+        .attr("stroke", "black")
+        .attr('opacity', ".6")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", (90-width/4))
+        .attr("y2", "0");
+      d3.selectAll("svg").append("g")
+        .append("line")
+        .attr("transform", "translate(" + (width + margin - 10) + "," + (margin + 25) + ")")
+        .attr("x2", "0")
+        .transition().ease(d3.easeLinear).duration(500).delay(11000)
+        .attr("stroke", "black")
+        .attr('opacity', ".6")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", "0")
+        .attr("y2", vertical);
+      d3.selectAll("svg").append("g")
+        .append("line")
+        .attr("transform", "translate(" + (margin + 90) + "," + (margin + 25) + ")")
+        .attr("x2", "0")
+        .transition().ease(d3.easeLinear).duration(500).delay(8100)
+        .attr("stroke", "black")
+        .attr('opacity', ".6")
+        .attr("x1", "0")
+        .attr("y1", "0")
+        .attr("x2", "0")
+        .attr("y2", vertical);
     }
 
     //=========================================//
@@ -451,7 +560,8 @@
                 .style("top", (d3.event.pageY-10)+"px")
                 .style("left", (d3.mouse(this)[0]+600) + "px")
                 .style("top", (d3.mouse(this)[1]+250) + "px")
-                .html(d.state_abbr + " " + y_ax + ": " + Math.round(d[y_data])
+                .html("<b>" + d.state_abbr + "</b></br>"
+                    + y_ax + ": " + Math.round(d[y_data])
                     + "</br>Repay Rate Diff: "
                     + Math.round((+d.meanRepayRate_byStateAndIncome + Number.EPSILON) * 100) / 100
                     );
